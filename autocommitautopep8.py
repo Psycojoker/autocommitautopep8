@@ -3,6 +3,7 @@
 import os
 import autopep8
 import subprocess
+import multiprocessing
 
 from collections import OrderedDict
 
@@ -109,35 +110,32 @@ def get_python_files():
     return python_files
 
 
+class FakeOption:
+    in_place = True
+    line_range = None
+    ignore = []
+    max_line_length = None
+    hang_closing = False
+    aggressive = False
+    verbose = False
+    pep8_passes = None
+    experimental = False
+    diff = False
+    indent_size = 4
+    jobs = max(1, multiprocessing.cpu_count() - 1)
+    recursive = False
+    exclude = None
+    max_line_length = 80
+
+
 def main():
     python_files = get_python_files()
-
-    class FakeOption:
-        in_place = True
-        line_range = None
-        ignore = []
-        max_line_length = None
-        hang_closing = False
-        aggressive = False
-        verbose = False
-        pep8_passes = None
-        experimental = False
-        diff = False
-        indent_size = 4
-        max_line_length = 80
 
     options = FakeOption()
 
     for number, (error, description) in enumerate(errors.items(), start=1):
-        commit = False
-
-        for python_file in python_files:
-            options.select = [error]
-            if autopep8.fix_file(python_file, options=options):
-                print("%s %s" % (error, python_file))
-                commit = True
-
-        if commit:
+        options.select = [error]
+        if autopep8.fix_multiple_files(python_files, options=options):
             command = "hg commit -m '{error} - {description}'".format(error=error, description=description)
             print("%s/%s %s" % (number, len(errors), command))
             subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
