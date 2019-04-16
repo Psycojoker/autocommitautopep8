@@ -165,7 +165,7 @@ def main():
     for number, (error, description) in enumerate(errors.items(), start=1):
         options.select = [error]
         if fix_multiple_files(python_files, options=options):
-            command = "hg commit -m '{error} - {description}'".format(error=error, description=description)
+            command = "hg commit -m '[autopep8] {error} - {description}'".format(error=error, description=description)
             print("%s/%s %s" % (number, len(errors), command))
             subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
 
