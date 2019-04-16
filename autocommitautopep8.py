@@ -121,20 +121,19 @@ def _fix_file(parameters):
         print(unicode(error))
 
 
-def fix_multiple_files(filenames, options, output=None):
-    """Fix list of files.
-
-    Optionally fix files recursively.
-
-    """
+def fix_files(filenames, options, output=None):
+    """Fix list of files."""
 
     results = []
-    pool = multiprocessing.Pool(options.jobs)
-    ret = pool.map_async(_fix_file, [(name, options) for name in filenames])
 
-    # the .get() stuff is to handle KeywordInterrupt because
-    # multiprocessing.Pool is broken for that
-    results.extend([x for x in ret.get(99999999999999999999999999999) if x])
+    for name in filenames:
+        try:
+            result = autopep8.fix_file(name, options)
+            if result:
+                print("%s %s" % (options.select[0], name))
+                results.append(result)
+        except IOError as error:
+            print(unicode(error))
 
     return results
 
@@ -151,7 +150,7 @@ class FakeOption:
     experimental = False
     diff = False
     indent_size = 4
-    jobs = max(1, multiprocessing.cpu_count() / 2)
+    jobs = 1
     recursive = False
     exclude = None
     max_line_length = 80
@@ -164,7 +163,7 @@ def main():
 
     for number, (error, description) in enumerate(errors.items(), start=1):
         options.select = [error]
-        if fix_multiple_files(python_files, options=options):
+        if fix_files(python_files, options=options):
             command = "hg commit -m '{error} - {description}'".format(error=error, description=description)
             print("%s/%s %s" % (number, len(errors), command))
             subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
