@@ -3,7 +3,6 @@
 import os
 import autopep8
 import subprocess
-import multiprocessing
 
 from collections import OrderedDict
 
