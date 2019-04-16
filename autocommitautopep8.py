@@ -11,7 +11,8 @@ errors = OrderedDict([
     ("E101", "Reindent all lines."),
     ("E11", "Fix indentation."),
     ("E121", "Fix indentation to be a multiple of four."),
-    ("E122", "Add absent indentation for hanging indentation."),
+    # this one seems to be breaking code for some reason :c
+    # ("E122", "Add absent indentation for hanging indentation."),
     ("E123", "Align closing bracket to match opening bracket."),
     ("E124", "Align closing bracket to match visual indentation."),
     ("E125", "Indent to distinguish line from next logical line."),
