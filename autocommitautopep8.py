@@ -72,6 +72,22 @@ errors = OrderedDict([
 ])
 
 
+def detect_vcs():
+    pwd = os.path.realpath(os.curdir)
+
+    while pwd != "/" or pwd != os.path.split(pwd)[0]:
+        dirs = os.listdir(pwd)
+
+        if ".git" in dirs:
+            return "git"
+        elif ".hg" in dirs:
+            return "hg"
+
+        pwd = os.path.split(pwd)[0]
+
+    raise Exception("Couldn't find which dvcs is used :(")
+
+
 def get_python_files():
     ignore_roots = []
     python_files = []
@@ -157,6 +173,15 @@ class FakeOption:
 
 
 def main():
+    vcs = detect_vcs()
+
+    if vcs == "hg":
+        prefix = "hg commit -m"
+    elif vcs == "git":
+        prefix = "git commit -a -m"
+    else:
+        raise Exception("Uknown dvcs: %s" % dvcs)
+
     python_files = get_python_files()
 
     options = FakeOption()
@@ -164,7 +189,7 @@ def main():
     for number, (error, description) in enumerate(errors.items(), start=1):
         options.select = [error]
         if fix_files(python_files, options=options):
-            command = "hg commit -m '[autopep8] {error} - {description}'".format(error=error, description=description)
+            command = "{prefix} '[autopep8] {error} - {description}'".format(prefix=prefix, error=error, description=description)
             print("%s/%s %s" % (number, len(errors), command))
             subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
 
