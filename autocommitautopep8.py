@@ -78,50 +78,43 @@ def detect_vcs():
     while pwd != "/" or pwd != os.path.split(pwd)[0]:
         dirs = os.listdir(pwd)
 
-        if ".git" in dirs:
-            return "git"
-        elif ".hg" in dirs:
+        if ".hg" in dirs:
+            print("Info: detecting mercurial cvs")
             return "hg"
+        elif ".git" in dirs:
+            print("Info: detecting git cvs")
+            return "git"
 
         pwd = os.path.split(pwd)[0]
 
-    raise Exception("Couldn't find which dvcs is used :(")
+    raise Exception("Couldn't find which vcs is used :(")
 
 
-def get_python_files():
-    ignore_roots = []
+def get_python_files(vcs):
     python_files = []
 
-    for root, dirs, files in os.walk("."):
-        if root.startswith(tuple(ignore_roots)):
-            continue
+    # git ls-files
 
-        if root.split("/")[-1].startswith(".") and root != ".":
-            ignore_roots.append(root)
-            continue
+    if vcs == "hg":
+        all_hg_files = subprocess.check_output("hg status -A", shell=True).split("\n")
+        tracked_files = [x.split(" ", 1)[1] for x in all_hg_files if x.startswith("C ")]
+    elif vcs == "git":
+        tracked_files = subprocess.check_output("git ls-files", shell=True).split("\n")
 
-        if root.endswith((".git", ".hg")):
-            ignore_roots.append(root)
-            continue
+    tracked_files = filter(None, tracked_files)
 
-        # ignore virtualenvs
-        if {"bin", "include", "lib"}.issubset(set(dirs)):
-            ignore_roots.append(root)
-            continue
+    for file in tracked_files:
+        if file.endswith(".py"):
+            python_files.append(file)
+        elif not file.endswith((".pyc", ".css", ".js", ".html")):
+            content = open(file, "r").read()[:300].lower()
 
-        for file in files:
-            file = os.path.join(root, file)
-            if file.endswith(".py"):
+            if "# encoding: utf-8" in content:
                 python_files.append(file)
-            elif not file.endswith((".pyc", ".css", ".js", ".html")):
-                content = open(file, "r").read()[:300].lower()
-
-                if "# encoding: utf-8" in content:
-                    python_files.append(file)
-                elif "#!/usr/bin/env" in content:
-                    python_files.append(file)
-                elif "#!/usr/bin/python" in content:
-                    python_files.append(file)
+            elif "#!/usr/bin/env" in content:
+                python_files.append(file)
+            elif "#!/usr/bin/python" in content:
+                python_files.append(file)
 
     return python_files
 
@@ -180,9 +173,9 @@ def main():
     elif vcs == "git":
         prefix = "git commit -a -m"
     else:
-        raise Exception("Uknown dvcs: %s" % dvcs)
+        raise Exception("Uknown vcs: %s" % vcs)
 
-    python_files = get_python_files()
+    python_files = get_python_files(vcs)
 
     options = FakeOption()
 
