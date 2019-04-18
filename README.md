@@ -6,6 +6,8 @@ python project and generate one commit per PEP8 error it fixes.
 
 The idea is to automate the job you don't care about.
 
+FOR NOW IT ONLY WORKS WITH MERCURIAL.
+
 Installation
 ------------
 
