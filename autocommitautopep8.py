@@ -74,38 +74,37 @@ errors = OrderedDict([
 ])
 
 
-def detect_vcs():
-    pwd = os.path.realpath(os.curdir)
-
+def detect_vcs(pwd):
     while pwd != "/" or pwd != os.path.split(pwd)[0]:
         dirs = os.listdir(pwd)
 
         if ".hg" in dirs:
             print("Info: detecting mercurial cvs")
-            return "hg"
+            return "hg", pwd
         elif ".git" in dirs:
             print("Info: detecting git cvs")
-            return "git"
+            return "git", pwd
 
         pwd = os.path.split(pwd)[0]
 
     raise Exception("Couldn't find which vcs is used :(")
 
 
-def get_python_files(vcs):
+def get_python_files(vcs, path):
     python_files = []
 
     # git ls-files
 
     if vcs == "hg":
-        all_hg_files = subprocess.check_output("hg status -A", shell=True).split("\n")
+        all_hg_files = subprocess.check_output("hg status -A", shell=True, cwd=path).split("\n")
         tracked_files = [x.split(" ", 1)[1] for x in all_hg_files if x.startswith("C ")]
     elif vcs == "git":
-        tracked_files = subprocess.check_output("git ls-files", shell=True).split("\n")
+        tracked_files = subprocess.check_output("git ls-files", shell=True, cwd=path).split("\n")
 
     tracked_files = filter(None, tracked_files)
 
     for file in tracked_files:
+        file = os.path.join(path, file)
         if file.endswith(".py"):
             python_files.append(file)
         elif os.path.isdir(file):
@@ -195,10 +194,13 @@ class FakeOption:
 def main():
     parser = argparse.ArgumentParser(description='Autocommit autopep8 modifications.')
     parser.add_argument('-s', '--single-commit', action="store_true", default=False, help='do a single commit')
+    parser.add_argument('-p', '--path', default=".", help='path to the repository')
 
     args = parser.parse_args()
 
-    vcs = detect_vcs()
+    path = os.path.realpath(os.path.expanduser(args.path))
+
+    vcs, vcs_path = detect_vcs(path)
 
     if vcs == "hg":
         prefix = "hg commit -m"
@@ -207,7 +209,7 @@ def main():
     else:
         raise Exception("Uknown vcs: %s" % vcs)
 
-    python_files = get_python_files(vcs)
+    python_files = get_python_files(vcs, path=vcs_path)
 
     options = FakeOption()
 
@@ -217,13 +219,13 @@ def main():
             if fix_files(python_files, options=options):
                 command = "{prefix} '[autopep8] {error} - {description}'".format(prefix=prefix, error=error, description=description)
                 print("\r\033[K%s/%s %s" % (number, len(errors), command))
-                subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
+                subprocess.Popen(command, cwd=path, shell=True).wait()
     else:
         options.select = errors.keys()
         if fix_files(python_files, options=options):
             command = "{prefix} '[autopep8]'".format(prefix=prefix)
             print("\n%s" % command)
-            subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
+            subprocess.Popen(command, cwd=path, shell=True).wait()
 
 
 if __name__ == '__main__':
