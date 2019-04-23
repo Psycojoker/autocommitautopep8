@@ -2,6 +2,7 @@
 
 import os
 import autopep8
+import argparse
 import subprocess
 
 from collections import OrderedDict
@@ -136,12 +137,13 @@ def fix_files(filenames, options, output=None):
     """Fix list of files."""
 
     results = []
+    current_error = options.select[0] if len(options.select) == 1 else "All"
 
     for name in filenames:
         try:
             result = autopep8.fix_file(name, options)
             if result:
-                print("%s %s" % (options.select[0], name))
+                print("%s %s" % (current_error, name))
                 results.append(result)
         except IOError as error:
             print(unicode(error))
@@ -168,6 +170,11 @@ class FakeOption:
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Autocommit autopep8 modifications.')
+    parser.add_argument('-s', '--single-commit', action="store_true", default=False, help='do a single commit')
+
+    args = parser.parse_args()
+
     vcs = detect_vcs()
 
     if vcs == "hg":
@@ -181,11 +188,18 @@ def main():
 
     options = FakeOption()
 
-    for number, (error, description) in enumerate(errors.items(), start=1):
-        options.select = [error]
+    if not args.single_commit:
+        for number, (error, description) in enumerate(errors.items(), start=1):
+            options.select = [error]
+            if fix_files(python_files, options=options):
+                command = "{prefix} '[autopep8] {error} - {description}'".format(prefix=prefix, error=error, description=description)
+                print("%s/%s %s" % (number, len(errors), command))
+                subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
+    else:
+        options.select = errors.keys()
         if fix_files(python_files, options=options):
-            command = "{prefix} '[autopep8] {error} - {description}'".format(prefix=prefix, error=error, description=description)
-            print("%s/%s %s" % (number, len(errors), command))
+            command = "{prefix} '[autopep8]'".format(prefix=prefix)
+            print("%s" % command)
             subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
 
 
