@@ -30,3 +30,13 @@ If you which to do a signe commit instead, you can use the
 "-s"/"--single-commit" option:
 
     autocommitautopep8 -s
+
+You can also specify a path to your repository using "-p"/"--path" (but be
+aware that this will still use hg/git to get a list of the tracked files):
+
+    autocommitautopep8 --path path/to/my/project
+
+Note that this will also work as autocommitautopep8 will got up in the
+hierarchy path until it finds a ".hg" or a ".git".
+
+    autocommitautopep8 --path path/to/my/project/subdir
