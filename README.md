@@ -26,7 +26,7 @@ some thing have been fixed.
 Be aware that this can take quite some time but at least you have a nice
 progress bar.
 
-If you which to do a signe commit instead, you can use the
+If you wish to do a single commit instead, you can use the
 "-s"/"--single-commit" option:
 
     autocommitautopep8 -s
@@ -36,7 +36,7 @@ aware that this will still use hg/git to get a list of the tracked files):
 
     autocommitautopep8 --path path/to/my/project
 
-Note that this will also work as autocommitautopep8 will got up in the
+Note that this will also work as autocommitautopep8 will go up in the
 hierarchy path until it finds a ".hg" or a ".git".
 
     autocommitautopep8 --path path/to/my/project/subdir
