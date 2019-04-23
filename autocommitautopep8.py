@@ -106,6 +106,8 @@ def get_python_files(vcs):
     for file in tracked_files:
         if file.endswith(".py"):
             python_files.append(file)
+        elif os.path.isdir(file):
+            continue
         elif not file.endswith((".pyc", ".css", ".js", ".html")):
             content = open(file, "r").read()[:300].lower()
 
