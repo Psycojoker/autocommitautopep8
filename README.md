@@ -10,7 +10,7 @@ The idea is to automate the job you don't care about.
 Installation
 ------------
 
-    pip install --user git+https://github.com/Psycojoker/autocommitautopep8
+    pip install --user autocommitautopep8
 
 Usage
 -----
