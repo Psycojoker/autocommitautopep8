@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import os
+import sys
 import autopep8
 import argparse
 import subprocess
@@ -139,16 +140,38 @@ def fix_files(filenames, options, output=None):
     results = []
     current_error = options.select[0] if len(options.select) == 1 else "All"
 
-    for name in filenames:
+    for current, name in enumerate(filenames):
         try:
             result = autopep8.fix_file(name, options)
             if result:
-                print("%s %s" % (current_error, name))
+                print("\r\033[K%s %s" % (current_error, name))
                 results.append(result)
+            _display_progess_bar(current, len(filenames), current_error)
         except IOError as error:
             print(unicode(error))
 
     return results
+
+
+def _display_progess_bar(current, total, current_error):
+    columns = int(subprocess.check_output("stty size", shell=True).split(" ")[1])
+
+    prefix = "%s %s/%s " % (current_error, current, total)
+
+    # " -2" for surrounding "[]"
+    inner_bar_length = columns - len(prefix) - 2
+
+    percent = current / float(total)
+
+    current_bar = int(percent * inner_bar_length) * "="
+
+    if current_bar != inner_bar_length and len(current_bar) != 0:
+        current_bar = current_bar[:-1] + ">"
+
+    # clear the whole line
+    sys.stdout.write("\r\033[K")
+    sys.stdout.write("%s[%s%s]\r" % (prefix, current_bar, " " * (inner_bar_length - len(current_bar))))
+    sys.stdout.flush()
 
 
 class FakeOption:
@@ -193,13 +216,13 @@ def main():
             options.select = [error]
             if fix_files(python_files, options=options):
                 command = "{prefix} '[autopep8] {error} - {description}'".format(prefix=prefix, error=error, description=description)
-                print("%s/%s %s" % (number, len(errors), command))
+                print("\r\033[K%s/%s %s" % (number, len(errors), command))
                 subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
     else:
         options.select = errors.keys()
         if fix_files(python_files, options=options):
             command = "{prefix} '[autopep8]'".format(prefix=prefix)
-            print("%s" % command)
+            print("\n%s" % command)
             subprocess.Popen(command, cwd=os.path.realpath(os.path.curdir), shell=True).wait()
 
 
