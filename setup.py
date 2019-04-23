@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(name='autocommitautopep8',
       version='0.1',
-      description='',
+      description='auto generate git/hg commits per autopep8 fixes',
       author='Laurent Peuch',
       # long_description='',
       author_email='cortex@worlddomination.be',
@@ -18,5 +18,5 @@ setup(name='autocommitautopep8',
               'autocommitautopep8 = autocommitautopep8:main'
           ]
       },
-      keywords='',
+      keywords='pep8 autopep8 formatting',
       )
