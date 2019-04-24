@@ -8,6 +8,9 @@ import subprocess
 
 from collections import OrderedDict
 
+if sys.version_info[0] == '3':
+    unicode = str
+
 errors = OrderedDict([
     ("E101", "Reindent all lines"),
     ("E11", "Fix indentation"),
