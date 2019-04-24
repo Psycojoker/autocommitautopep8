@@ -96,10 +96,12 @@ def get_python_files(vcs, path):
     # git ls-files
 
     if vcs == "hg":
-        all_hg_files = subprocess.check_output("hg status -A", shell=True, cwd=path).split("\n")
+        all_hg_files = subprocess.check_output(
+            "hg status -A", shell=True, cwd=path).decode().split("\n")
         tracked_files = [x.split(" ", 1)[1] for x in all_hg_files if x.startswith("C ")]
     elif vcs == "git":
-        tracked_files = subprocess.check_output("git ls-files", shell=True, cwd=path).split("\n")
+        tracked_files = subprocess.check_output(
+            "git ls-files", shell=True, cwd=path).decode().split("\n")
 
     tracked_files = filter(None, tracked_files)
 
@@ -153,7 +155,8 @@ def fix_files(filenames, options, output=None):
 
 
 def _display_progess_bar(current, total, current_error):
-    columns = int(subprocess.check_output("stty size", shell=True).split(" ")[1])
+    columns = int(subprocess.check_output(
+        "stty size", shell=True).decode().split(" ")[1])
 
     prefix = "%s %s/%s " % (current_error, current, total)
 
