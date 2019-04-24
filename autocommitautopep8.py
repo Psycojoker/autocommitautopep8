@@ -184,7 +184,7 @@ class FakeOption:
     hang_closing = False
     aggressive = False
     verbose = False
-    pep8_passes = None
+    pep8_passes = -1
     experimental = False
     diff = False
     indent_size = 4
