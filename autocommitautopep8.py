@@ -114,15 +114,15 @@ def get_python_files(vcs, path):
             python_files.append(file)
         elif os.path.isdir(file):
             continue
-        elif not file.endswith((".pyc", ".css", ".js", ".html")):
-            content = open(file, "r").read()[:300].lower()
-
-            if "# encoding: utf-8" in content:
-                python_files.append(file)
-            elif "#!/usr/bin/env" in content:
-                python_files.append(file)
-            elif "#!/usr/bin/python" in content:
-                python_files.append(file)
+        # files without extensions could be python script
+        elif "." not in file:
+            try:
+                is_python_script = "python script" in subprocess.check_output(["file", file]).lower()
+            except Exception as e:
+                print("Warning: could launch the 'file' command on %s (to check if it's a python script) because of %s" % e)
+            else:
+                if is_python_script:
+                    python_files.append(file)
 
     return python_files
 
