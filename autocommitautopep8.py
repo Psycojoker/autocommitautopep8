@@ -93,7 +93,7 @@ def detect_vcs(pwd):
     raise Exception("Couldn't find which vcs is used :(")
 
 
-def get_python_files(vcs, path):
+def get_python_files(vcs, path, only_files):
     python_files = []
 
     # git ls-files
@@ -107,13 +107,25 @@ def get_python_files(vcs, path):
             "git ls-files", shell=True, cwd=path).decode().split("\n")
 
     tracked_files = filter(None, tracked_files)
+    matched_files = []
 
     for file in tracked_files:
         file = os.path.join(path, file)
+
+        if only_files:
+            matched_files = [x for x in only_files if file.endswith(x)]
+            # if we don't match any of the possible files, skip
+            if not matched_files:
+                continue
+
         if file.endswith(".py"):
             python_files.append(file)
         elif os.path.isdir(file):
             continue
+        elif only_files and matched_files:
+            # force add file that don't endswith ".py" but are in the
+            # only_files list because the user wants them
+            python_files.append(file)
         elif not file.endswith((".pyc", ".css", ".js", ".html")):
             content = open(file, "r").read()[:300].lower()
 
@@ -201,6 +213,7 @@ def main():
     parser = argparse.ArgumentParser(description='Autocommit autopep8 modifications.')
     parser.add_argument('-s', '--single-commit', action="store_true", default=False, help='do a single commit')
     parser.add_argument('-p', '--path', default=".", help='path to the repository')
+    parser.add_argument('-f', '--files', nargs='*', help='if specified, only work on the specified files')
 
     args = parser.parse_args()
 
@@ -215,7 +228,7 @@ def main():
     else:
         raise Exception("Uknown vcs: %s" % vcs)
 
-    python_files = get_python_files(vcs, path=vcs_path)
+    python_files = get_python_files(vcs, path=vcs_path, only_files=args.files)
 
     options = FakeOption()
 
