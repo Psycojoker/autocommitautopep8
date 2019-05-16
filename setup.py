@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='autocommitautopep8',
-      version='0.2.1',
+      version='0.3.1',
       description='auto generate git/hg commits per autopep8 fixes',
       author='Laurent Peuch',
       # long_description='',
